@@ -14,9 +14,10 @@ buildNumber.properties
 **/mvnw.cmd
 **/.mvn
 **/target/
-**/.gitattributes
+
 .idea
 **/.gitignore
+**/.gitattributes
 
 # Eclipse m2e generated files
 # Eclipse Core
