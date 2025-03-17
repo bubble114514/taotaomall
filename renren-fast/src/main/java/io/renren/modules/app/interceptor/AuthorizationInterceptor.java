@@ -8,7 +8,6 @@
 
 package io.renren.modules.app.interceptor;
 
-
 import io.jsonwebtoken.Claims;
 import io.renren.common.exception.RRException;
 import io.renren.modules.app.utils.JwtUtils;
@@ -18,7 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,7 +28,7 @@ import javax.servlet.http.HttpServletResponse;
  * @author Mark sunlightcs@gmail.com
  */
 @Component
-public class AuthorizationInterceptor extends HandlerInterceptorAdapter {
+public class AuthorizationInterceptor implements HandlerInterceptor {
     @Autowired
     private JwtUtils jwtUtils;
 
@@ -69,4 +68,8 @@ public class AuthorizationInterceptor extends HandlerInterceptorAdapter {
 
         return true;
     }
+
+
+
+
 }

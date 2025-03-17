@@ -31,6 +31,7 @@
     </properties>
     <dependencies>
 
+
         <!--mybatis-plus-->
         <dependency>
             <groupId>com.baomidou</groupId>
@@ -47,12 +48,7 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>io.renren</groupId>
-            <artifactId>renren-fast</artifactId>
-            <version>3.0.0</version>
-            <scope>compile</scope>
-        </dependency>
+
         <dependency>
             <groupId>io.renren</groupId>
             <artifactId>renren-fast</artifactId>
@@ -81,7 +77,25 @@
             <version>2.5</version>
             <scope>provided</scope>
         </dependency>
+        <!--        nacos-->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+            <version>2021.0.1.0</version>
+        </dependency>
     </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-alibaba</artifactId>
+                <version>2021.0.1.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <plugins>

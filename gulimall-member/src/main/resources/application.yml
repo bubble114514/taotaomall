@@ -5,6 +5,10 @@ spring:
     url: jdbc:mysql://169.254.139.10:3306/gulimall_ums
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+  cloud:
+    nacos:
+      server-addr: 127.0.0.1:8848
+
 mybatis-plus:
   mapper-locations: classpath:mapper/**/*.xml
   global-config:
