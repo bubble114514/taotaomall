@@ -39,6 +39,11 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  *      默认所有的配置集都属于DEFAULT_GROUP；
  *      1）开发、测试、生产：利用分组来做环境隔离。
  *每个微服务创建自己的命名空间，使用配置分组区分环境，dev,test,prod
+ *  三、同时加载多个配置集
+ *      1.微服务任何配置信息，任何配置文件都可以放在配置中心中
+ *      2.只需要在bootstrap.properties说明加载配置中心中哪些配置文件即可
+ *      3.@Value("${配置项的名}")：从配置文件中获取值
+ *        @ConfigureProperties(prefix = "spring.datasource")：指定配置文件的哪部分内容，映射到这个对象中
  *
  */
 
