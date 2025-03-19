@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: gulimall-product
   datasource:
     username: root
     password: root
@@ -6,12 +8,19 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   cloud:
     nacos:
-      server-addr: 127.0.0.1:8848
+      discovery:
+#        service: gulimall-product
+        server-addr: 127.0.0.1:8848
 mybatis-plus:
   mapper-locations: classpath:mapper/**/*.xml
   global-config:
     db-config:
       id-type: auto
+      logic-delete-value: 1
+      logic-not-delete-value: 0
 
 server:
   port: 10000
+logging:
+  level:
+    com.atguigu.gulimall: debug

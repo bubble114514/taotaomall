@@ -5,6 +5,38 @@ spring:
         server-addr: 127.0.0.1:8848
     gateway:
       routes:
+
+
+        - id: product_route
+          uri: lb://gulimall-product
+          predicates:
+            - Path=/api/product/**
+          filters:
+            - RewritePath=/api/(?<segment>.*),/$\{segment}
+
+
+
+        - id: member_route
+          uri: lb://gulimall-member
+          predicates:
+            - Path=/api/member/**
+          filters:
+            - RewritePath=/api/(?<segment>.*),/$\{segment}
+
+        - id: ware_route
+          uri: lb://gulimall-ware
+          predicates:
+            - Path=/api/ware/**
+          filters:
+            - RewritePath=/api/(?<segment>.*),/$\{segment}
+
+        - id: third_party_route
+          uri: lb://gulimall-third-party
+          predicates:
+            - Path=/api/thirdparty/**
+          filters:
+            - RewritePath=/api/thirdparty/(?<segment>.*),/$\{segment}
+
         # 路由id，自定义，只要唯一即可
         - id: admin_route
           # uri路由的目标地址。lb就是负载均衡，后面跟服务名称。
@@ -17,28 +49,3 @@ spring:
             #路径重写。逗号左边是原路径，右边是重写后的路径
             - RewritePath=/api/(?<segment>.*),/renren-fast/$\{segment}
             # 默认规则， 请求过来：http://localhost:88/api/captcha.jpg   转发-->  http://renren-fast:8080/renren-fast/captcha.jpg
-
-        - id: product_route
-          uri: lb://gulimall-product
-          predicates:
-            - Path=/api/product/**
-          filters:
-            - RewritePath=/api/(?<segment>.*),/$\{segment}
-        - id: member_route
-          uri: lb://gulimall-member
-          predicates:
-            - Path=/api/member/**
-          filters:
-            - RewritePath=/api/(?<segment>.*),/$\{segment}
-        - id: ware_route
-          uri: lb://gulimall-ware
-          predicates:
-            - Path=/api/ware/**
-          filters:
-            - RewritePath=/api/(?<segment>.*),/$\{segment}
-        - id: third_party_route
-          uri: lb://gulimall-third-party
-          predicates:
-            - Path=/api/thirdparty/**
-          filters:
-            - RewritePath=/api/thirdparty/(?<segment>.*),/$\{segment}
