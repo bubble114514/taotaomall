@@ -11,6 +11,12 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
 
+/**
+ * 1、引入oss-starter
+ * 2、在application.yml中配置key、secret、endpoint
+ * 3、使用OSSClient进行相关操作
+ */
+
 @RunWith(SpringRunner.class)
 @SpringBootTest
 class GulimallProductApplicationTests {
@@ -18,8 +24,10 @@ class GulimallProductApplicationTests {
     @Autowired
     BrandService brandService;
 
+
+
     @Test
-     public void contextLoads() {
+    public void contextLoads() {
 //        BrandEntity brandEntity = new BrandEntity();
 //        brandEntity.setBrandId(1L);
 //        brandEntity.setDescript("手机");
@@ -30,8 +38,8 @@ class GulimallProductApplicationTests {
 
 //        brandService.updateById(brandEntity);
 
-        List<BrandEntity> list = brandService.list(new QueryWrapper<BrandEntity>().eq("brand_id",1L));
-        list.forEach(item->{
+        List<BrandEntity> list = brandService.list(new QueryWrapper<BrandEntity>().eq("brand_id", 1L));
+        list.forEach(item -> {
             System.out.println(item);
         });
     }

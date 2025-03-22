@@ -71,6 +71,16 @@ public class BrandController {
 
         return R.ok();
     }
+//    /**
+//     * 修改显示状态
+//     */
+//    @RequestMapping("/update/status")
+//    public R updateStatus(@RequestParam Long   brandId,
+//                          @RequestParam Integer  showStatus){
+//		brandService.updateStatus(brandId,showStatus);
+//
+//        return R.ok();
+//    }
 
     /**
      * 删除

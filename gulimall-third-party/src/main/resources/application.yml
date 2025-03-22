@@ -1,0 +1,15 @@
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+
+    alicloud:
+        access-key: LTAI5t7Z63u5HDPSHTroQqV6
+        secret-key: oGeWrAjHAkYwgyfb1G9nBcxIDcrWfG
+        region-id: cn-beijing
+        oss:
+          endpoint: oss-cn-beijing.aliyuncs.com
+          bucket: gulimall-paopaozi
+  application:
+    name: gulimall-third-party
