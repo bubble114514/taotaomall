@@ -33,6 +33,7 @@ public class WareSkuController {
 
     /**
      * 列表
+     *
      */
     @RequestMapping("/list")
     public R list(@RequestParam Map<String, Object> params){

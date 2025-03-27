@@ -1,5 +1,6 @@
 package com.atguigu.gulimall.product.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
@@ -32,7 +33,8 @@ public class SpuInfoEntity implements Serializable {
 	/**
 	 * 商品描述
 	 */
-	private String decript;
+	@TableField("spu_description") // 明确映射到数据库列
+	private String spuDescription;
 	/**
 	 * 所属分类id
 	 */
