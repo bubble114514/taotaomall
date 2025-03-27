@@ -32,7 +32,7 @@ public class SpuInfoEntity implements Serializable {
 	/**
 	 * 商品描述
 	 */
-	private String spuDescription;
+	private String decript;
 	/**
 	 * 所属分类id
 	 */

@@ -3,6 +3,7 @@ package com.atguigu.gulimall.product.service.impl;
 import com.atguigu.gulimall.product.service.CategoryBrandRelationService;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import java.util.Map;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service("brandService")
 public class BrandServiceImpl extends ServiceImpl<BrandDao, BrandEntity> implements BrandService {
 
+    @Lazy
     @Autowired
     CategoryBrandRelationService categoryBrandRelationService;
 
