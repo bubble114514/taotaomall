@@ -4,7 +4,7 @@ spring:
       discovery:
         server-addr: 127.0.0.1:8848
     gateway:
-      routes:
+      routes:  # geiwo caozuo
         - id: product_route
           uri: lb://gulimall-product
           predicates:

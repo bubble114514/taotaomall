@@ -30,7 +30,7 @@ import com.atguigu.common.utils.R;
 public class ProductAttrValueController {
     @Autowired
     private ProductAttrValueService productAttrValueService;
-
+//用谷歌 ok
     /**
      * 列表
      */
