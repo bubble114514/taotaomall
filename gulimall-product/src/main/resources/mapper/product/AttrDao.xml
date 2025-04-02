@@ -16,11 +16,16 @@
         <result property="showDesc" column="show_desc"/>
     </resultMap>
     <select id="selectSearchAttrs" resultType="java.lang.Long">
-    SELECT attr_id from pms_attr WHERE attr_id IN
-    <foreach collection="attrIds" item="attrId" open="(" separator="," close=")">
-        #{attrId}
-    </foreach>
-    AND search_type = 1
+        SELECT attr_id FROM pms_attr
+        <where>
+            <if test="attrIds != null and !attrIds.isEmpty()">
+                attr_id IN
+                <foreach collection="attrIds" item="attrId" open="(" separator="," close=")">
+                    #{attrId}
+                </foreach>
+            </if>
+            AND search_type = 1
+        </where>
     </select>
 
 

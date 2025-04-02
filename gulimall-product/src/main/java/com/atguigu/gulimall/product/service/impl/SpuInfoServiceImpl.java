@@ -1,4 +1,5 @@
 package com.atguigu.gulimall.product.service.impl;
+
 import com.alibaba.fastjson.TypeReference;
 import com.atguigu.common.constant.ProductConstant;
 import com.atguigu.common.to.SkuHasStockVo;
@@ -221,20 +222,20 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
 
     @Override
     public void up(Long spuId) {
-
-        //组装需要的数据
-        //1、查出当前spuid对应的所有sku信息
+        // 组装需要的数据
+        // 1、查出当前spuid对应的所有sku信息
         List<SkuInfoEntity> skus = skuInfoService.getSkusBySpuId(spuId);
         List<Long> skuIds = skus.stream().map(SkuInfoEntity::getSkuId).collect(Collectors.toList());
 
-        //调用远程仓储服务，提前查出来，避免循环查库
+        // 调用远程仓储服务，提前查出来，避免循环查库
         Map<Long, Boolean> stockMap = null;
         // todo 1、发送远程调用，库存系统查询是否有库存
         try {
             R<List<SkuHasStockVo>> r = wareFeignService.getSkuHasStock(skuIds);
 
             com.alibaba.fastjson.TypeReference<List<SkuHasStockVo>> typeRef =
-                    new com.alibaba.fastjson.TypeReference<List<SkuHasStockVo>>() {};
+                    new com.alibaba.fastjson.TypeReference<List<SkuHasStockVo>>() {
+                    };
 
             List<SkuHasStockVo> stockVos = Optional.ofNullable(r.getData(typeRef))
                     .orElseGet(ArrayList::new);
@@ -257,18 +258,16 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
             ));
         }
 
-
-        //封装attrs
-        //todo 4、查询当前sku所有可以被检索的规格属性
-//        productAttrValueService.baseAttrListForSpu();
+        // 封装attrs
+        // todo 4、查询当前sku所有可以被检索的规格属性
         List<ProductAttrValueEntity> attrsBySpuId = productAttrValueService.baseAttrlistforspu(spuId);
         List<Long> attrIds = attrsBySpuId.stream().map(ProductAttrValueEntity::getAttrId).collect(Collectors.toList());
 
-        //这是可被检索属性的id集合
+        // 这是可被检索属性的id集合
         List<Long> searchAttrIds = attrService.selectSearchAttrs(attrIds);
-        //为了筛选出可被检索的商品attrs
+        // 为了筛选出可被检索的商品attrs
         Set<Long> setAttrIds = new HashSet<>(searchAttrIds);
-        //拿到所有的可以被检索的商品属性关系表中数据，并提取出商品需要的attrs
+        // 拿到所有的可以被检索的商品属性关系表中数据，并提取出商品需要的attrs
         List<SkuEsModel.Attrs> attrsList = attrsBySpuId.stream()
                 .filter(item -> setAttrIds.contains(item.getAttrId()))
                 .map(item -> {
@@ -277,7 +276,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
                     return attrs;
                 }).collect(Collectors.toList());
 
-        //封装每个sku信息
+        // 封装每个sku信息
         Map<Long, Boolean> finalStockMap = stockMap;
         List<SkuEsModel> upProducts = skus.stream().map(sku -> {
             SkuEsModel skuEsModel = new SkuEsModel();
@@ -297,39 +296,46 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
             skuEsModel.setHotScore(0L);
 
             // brandName brandImg
-            //todo 3、查询品牌和分类的名字信息
+            // todo 3、查询品牌和分类的名字信息
             BrandEntity brand = brandService.getById(sku.getBrandId());
-            skuEsModel.setBrandName(brand.getName());
-            skuEsModel.setBrandImg(brand.getLogo());
-            //  catalogName
-            CategoryEntity category = categoryService.getById(sku.getCatalogId());
-            skuEsModel.setCatalogName(category.getName());
+            if (brand != null) {
+                skuEsModel.setBrandName(brand.getName());
+                skuEsModel.setBrandImg(brand.getLogo());
+            } else {
+                log.error("品牌信息未找到，brandId: {}", sku.getBrandId());
+                skuEsModel.setBrandName(null);
+                skuEsModel.setBrandImg(null);
+            }
 
-            //   private Long attrId;
-            //   private String attrName;
-            //   private String attrValue;
-            //设置检索属性
+            // catalogName
+            CategoryEntity category = categoryService.getById(sku.getCatalogId());
+            if (category != null) {
+                skuEsModel.setCatalogName(category.getName());
+            } else {
+                log.error("分类信息未找到，catalogId: {}", sku.getCatalogId());
+                skuEsModel.setCatalogName(null);
+            }
+
+            // 设置检索属性
             skuEsModel.setAttrs(attrsList);
             return skuEsModel;
         }).collect(Collectors.toList());
+
         // 远程调用上架商品
-        //todo 5、将数据发送给es保存
+        // todo 5、将数据发送给es保存
         R r = searchFeignService.productStatusUp(upProducts);
-        if (r.getCode()==0){
-            //远程调用成功
-            //todo 更改spuinfo中商品的发布状态为已上架
-            //状态应该作为枚举类存在的
+
+        if (r.getCode() == 0) {
+            // 远程调用成功
+            // todo 更改spuinfo中商品的发布状态为已上架
+            // 状态应该作为枚举类存在的
             baseMapper.updateSpuStatus(spuId, ProductConstant.StatusEnum.SPU_UP.getCode());
-        }else {
-            //远程调用失败
-            //todo 7、重复调用？接口幂等性；重试机制？xxx
+        } else {
+            // 远程调用失败
+            // todo 7、重复调用？接口幂等性；重试机制？xxx
             log.error("远程调用失败");
-
         }
-
-
     }
-
 
 
 }

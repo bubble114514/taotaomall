@@ -45,3 +45,9 @@ spring:
             #路径重写。逗号左边是原路径，右边是重写后的路径
             - RewritePath=/api/(?<segment>.*),/renren-fast/$\{segment}
             # 默认规则， 请求过来：http://localhost:88/api/captcha.jpg   转发-->  http://renren-fast:8080/renren-fast/captcha.jpg
+
+        - id: gulimall_host_route
+          uri: lb://gulimall-product
+          predicates:
+            - Host=**.gulimall.com,gulimall.com
+

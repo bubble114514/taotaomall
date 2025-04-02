@@ -41,6 +41,21 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  *      @Target({ElementType.METHOD, ElementType.FIELD, ElementType.ANNOTATION_TYPE, ElementType.CONSTRUCTOR, ElementType.PARAMETER, ElementType.TYPE_USE})
  *      @Retention(RetentionPolicy.RUNTIME)
  * 4.统一异常处理Exception类
+ *
+ * 5.模版引擎
+ *  1)、thymeleaf-start：关闭缓存
+ *  2)、静态资源都放在static文件夹下就可以按照路径直接访问
+ *  3)、页面放在templates下，按照路径拼接进行访问
+ *      Springboot：访问项目时，默认会找index
+ *  4)、页面修改不重启服务器实时更新
+ *      添加热部署
+ *      <dependency>
+ *          <groupId>org.springframework.boot</groupId>
+ *          <artifactId>spring-boot-devtools</artifactId>
+ *          <optional>true</optional>
+ *      </dependency>
+ *
+ *
  */
 
 @EnableFeignClients(basePackages = "com.atguigu.gulimall.product.feign")
