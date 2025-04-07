@@ -4,7 +4,7 @@ spring:
   datasource:
     username: root
     password: root
-    url: jdbc:mysql://169.254.139.10:3306/gulimall_pms?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
+    url: jdbc:mysql://169.254.139.10:3306/gulimall_pms
     driver-class-name: com.mysql.cj.jdbc.Driver
   cloud:
     nacos:
@@ -15,10 +15,24 @@ spring:
     date-format: yyyy-MM-dd HH:mm:ss
   thymeleaf:
     cache: false
+  redis:
+    host: 169.254.139.10
+    port: 6379
+
+#  mvc:
+#    static-path-pattern: /static/**
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 3600000 # 过期时间
+      #如果制定了前缀就用指定的，如果没指定就默认使用缓存的名字作为前缀
+      #key-prefix: CACHE_
+      use-key-prefix: true # key值加前缀
+      cache-null-values: true # 缓存空值，防止缓存穿透
 
 
-  mvc:
-    static-path-pattern: /static/**
+
 
 
 mybatis-plus:

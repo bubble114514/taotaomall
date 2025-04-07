@@ -1,22 +1,40 @@
 spring:
   cloud:
-    nacos:
-      discovery:
-        server-addr: 127.0.0.1:8848
     gateway:
-      routes:  # geiwo caozuo
+      routes:
+        # 和admin_route顺序不能乱，否则页面访问报404，因为被它拦截了
+        # 我们一般把精确的路由放在上面，优先级高
+        # 匹配了这个路由之后，不会匹配下面的路由
         - id: product_route
           uri: lb://gulimall-product
           predicates:
             - Path=/api/product/**
+          # 前端的请求是 http://localhost:88/api/product/category/list/tree
+          # 后端实际需要的请求是，http://localhost:12000/product/category/list/tree
           filters:
             - RewritePath=/api/(?<segment>.*),/$\{segment}
 
+            #  http://localhost:88/api/thirdparty/oss/policy
+        - id: third_party_route
+          #  lb 负载均衡
+          uri: lb://gulimall-third-party
+          # 匹配所有以api开头的请求
+          predicates:
+            - Path=/api/thirdparty/**
+          filters:
+            #  路径重写
+            # (?<segment>.*)  $\{segment} 相当于片段
+            - RewritePath=/api/thirdparty/(?<segment>.*),/$\{segment}
+
         - id: member_route
+          #  lb 负载均衡
           uri: lb://gulimall-member
+          # 匹配所有以api开头的请求
           predicates:
             - Path=/api/member/**
           filters:
+            #  路径重写
+            # (?<segment>.*)  $\{segment} 相当于片段
             - RewritePath=/api/(?<segment>.*),/$\{segment}
 
         - id: ware_route
@@ -26,28 +44,61 @@ spring:
           filters:
             - RewritePath=/api/(?<segment>.*),/$\{segment}
 
-        - id: third_party_route
-          uri: lb://gulimall-third-party
-          predicates:
-            - Path=/api/thirdparty/**
-          filters:
-            - RewritePath=/api/thirdparty/(?<segment>.*),/$\{segment}
-
-        # 路由id，自定义，只要唯一即可
+        #  前端项目发送请求都以 /api 开头
         - id: admin_route
-          # uri路由的目标地址。lb就是负载均衡，后面跟服务名称。
+          #  lb 负载均衡  到renren-fast服务
           uri: lb://renren-fast
-          #断言工厂的Path，请求路径必须符合指定规则
+          # 匹配所有以api开头的请求
           predicates:
-            - Path=/api/**    # 把所有api开头的请求都转发给renren-fast
-          #局部过滤器。回顾默认过滤器default-filters是与routes同级
+            - Path=/api/**
           filters:
-            #路径重写。逗号左边是原路径，右边是重写后的路径
+            #  路径重写
+            # http://localhost:88/api/captcha.jpg 在网关匹配到相应的规则后
+            #  就变成了 http://localhost:8080/api/captcha.jpg
+            # 但实际上我们需要真正访问的是 http://localhost:8080/renren-fast/captcha.jpg
+            # (?<segment>.*)  $\{segment} 相当于片段
             - RewritePath=/api/(?<segment>.*),/renren-fast/$\{segment}
-            # 默认规则， 请求过来：http://localhost:88/api/captcha.jpg   转发-->  http://renren-fast:8080/renren-fast/captcha.jpg
 
+        # 域名映射只能放在最后面，否则会覆盖上面的api路径
+        # 例如我们访问product的api路径，优先匹配到这个的话就会去直接找product
+        # 不会再路径重写了
         - id: gulimall_host_route
           uri: lb://gulimall-product
           predicates:
-            - Host=**.gulimall.com,gulimall.com
+            - Host=gulimall.com #正常应该是通过网关跳到Project首页
+
+        - id: gulimall_search_route
+          uri: lb://gulimall-search
+          predicates:
+            - Host=search.gulimall.com
+
+        - id: gulimall_auth_route
+          uri: lb://gulimall-auth-server
+          predicates:
+              - Host=auth.gulimall.com
+
+        - id: gulimall_cart_route
+          uri: lb://gulimall-cart
+          predicates:
+            - Host=cart.gulimall.com
+
+        - id: gulimall_order_route
+          uri: lb://gulimall-order
+          predicates:
+            - Host=order.gulimall.com
+
+        - id: gulimall_member_route
+          uri: lb://gulimall-member
+          predicates:
+            - Host=member.gulimall.com
+
+        - id: gulimall_seckill_route
+          uri: lb://gulimall-seckill
+          predicates:
+            - Host=seckill.gulimall.com
+#这报错不用管
+# 开启日志
+logging:
+  level:
+    com.atguigu.gulimall: debug
 
