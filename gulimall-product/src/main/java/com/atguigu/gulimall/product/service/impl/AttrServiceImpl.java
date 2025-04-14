@@ -23,6 +23,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -74,6 +75,7 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
 
     }
 
+    @Cacheable(value = "attr", key = "'attr:info:'+#root.args[0]")
     @Override
     public PageUtils queryBaseAttrPage(Map<String, Object> params, Long catelogId, String type) {
         QueryWrapper<AttrEntity> queryWrapper = new QueryWrapper<AttrEntity>().eq("attr_type", "base".equalsIgnoreCase(type) ?

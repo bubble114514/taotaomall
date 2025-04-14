@@ -19,7 +19,7 @@ public class SearchParam {
     //排序条件：sort=price/salecount/hotscore_desc/asc
     private String sort;
     // 是否显示有货 0（无库存）1（有库存）
-    private Integer hasStock=1;
+    private Integer hasStock;
 
     /*** 价格区间 */
     private String skuPrice;

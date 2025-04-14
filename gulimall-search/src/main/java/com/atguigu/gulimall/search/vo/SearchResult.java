@@ -22,7 +22,8 @@ public class SearchResult {
     private Long total;
     /** * 总页码*/
     private Integer totalPages;
-
+    /**导航页   页码遍历结果集(分页)  */
+    private List<Integer> pageNavs;
     /** 当前查询到的结果, 所有涉及到的品牌*/
     private List<BrandVo> brands;
     /*** 当前查询到的结果, 所有涉及到的分类*/
@@ -30,11 +31,9 @@ public class SearchResult {
     /** * 当前查询的结果 所有涉及到所有属性*/
     private List<AttrVo> attrs;
 
-    /** 导航页   页码遍历结果集(分页)  */
-    private List<Integer> pageNavs;
 //	================以上是返回给页面的所有信息================
 
-    /** 导航数据*/
+    /** 面包屑导航数据*/
     private List<NavVo> navs = new ArrayList<>();
 
     /** 便于判断当前id是否被使用*/
@@ -42,7 +41,7 @@ public class SearchResult {
 
     @Data
     public static class NavVo {
-        private String name;
+        private String navName;
         private String navValue;
         private String link;
     }
