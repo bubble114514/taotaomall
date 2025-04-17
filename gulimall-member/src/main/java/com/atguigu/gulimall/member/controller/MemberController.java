@@ -4,18 +4,20 @@ import java.util.Arrays;
 import java.util.Map;
 
 
+import com.atguigu.common.exception.BizCodeEnume;
+import com.atguigu.common.vo.MemberLoginVo;
+import com.atguigu.common.vo.MemberRegistVo;
+import com.atguigu.gulimall.member.exception.PhoneExistException;
+import com.atguigu.gulimall.member.exception.UsernameExistException;
 import com.atguigu.gulimall.member.feign.CouponFeignService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.atguigu.gulimall.member.entity.MemberEntity;
 import com.atguigu.gulimall.member.service.MemberService;
 import com.atguigu.common.utils.PageUtils;
 import com.atguigu.common.utils.R;
+
 
 
 
@@ -41,6 +43,32 @@ public class MemberController {
         memberEntity.setNickname("泡泡");
         R membercoupons = couponFeignService.membercoupons();
         return R.ok().put("member",memberEntity).put("coupons",membercoupons.get("coupons"));
+    }
+
+    @PostMapping("/register")
+    public R register(@RequestBody MemberRegistVo vo ){
+        try {
+            memberService.register(vo);
+        }catch (PhoneExistException e){
+            return R.error(BizCodeEnume.PHONE_EXIST_EXCEPTION.getCode(), BizCodeEnume.PHONE_EXIST_EXCEPTION.getMsg());
+        }catch (UsernameExistException e){
+            return R.error(BizCodeEnume.USER_EXIST_EXCEPTION.getCode(), BizCodeEnume.USER_EXIST_EXCEPTION.getMsg());
+        }catch (Exception e){
+            return R.error(400,"注册失败");
+        }
+
+        return R.ok();
+    }
+
+    @PostMapping("/login")
+    public R login(@RequestBody MemberLoginVo vo){
+        MemberEntity member =memberService.login(vo);
+        if (member!=null){
+            return R.ok();
+        }else {
+            return R.error(BizCodeEnume.LOGINACCT_PASSWORD_INVAILD_EXCEPTION.getCode(),BizCodeEnume.LOGINACCT_PASSWORD_INVAILD_EXCEPTION.getMsg());
+        }
+
     }
 
     /**

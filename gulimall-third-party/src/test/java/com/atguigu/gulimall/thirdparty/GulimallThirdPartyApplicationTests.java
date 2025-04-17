@@ -1,6 +1,8 @@
 package com.atguigu.gulimall.thirdparty;
 
 import com.aliyun.oss.OSS;
+import com.atguigu.gulimall.thirdparty.util.SMSUtil;
+import org.checkerframework.checker.units.qual.A;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,7 +16,14 @@ import java.nio.file.Paths;
 class GulimallThirdPartyApplicationTests {
     @Autowired
     OSS ossClient;
+    @Autowired
+    SMSUtil smsUtil;
 
+    @Test
+    public void sendSms(){
+        smsUtil.sendMessage("SMS_154950909", "18231978918", "{\"code\":\"1234\"}");
+
+    }
     @Test
     public void testUpload() throws com.aliyuncs.exceptions.ClientException, IOException {
 
