@@ -7,6 +7,7 @@ import java.util.Map;
 import com.atguigu.common.exception.BizCodeEnume;
 import com.atguigu.common.vo.MemberLoginVo;
 import com.atguigu.common.vo.MemberRegistVo;
+import com.atguigu.common.vo.SocialUserVo;
 import com.atguigu.gulimall.member.exception.PhoneExistException;
 import com.atguigu.gulimall.member.exception.UsernameExistException;
 import com.atguigu.gulimall.member.feign.CouponFeignService;
@@ -64,7 +65,23 @@ public class MemberController {
     public R login(@RequestBody MemberLoginVo vo){
         MemberEntity member =memberService.login(vo);
         if (member!=null){
-            return R.ok();
+            return R.ok().setData(member);//调用方接收返回值
+        }else {
+            return R.error(BizCodeEnume.LOGINACCT_PASSWORD_INVAILD_EXCEPTION.getCode(),BizCodeEnume.LOGINACCT_PASSWORD_INVAILD_EXCEPTION.getMsg());
+        }
+
+    }
+
+    /**
+     * 社交登录
+     * @param
+     * @return
+     */
+    @PostMapping("/weibo/oauth2/login")
+        public R oauthlogin(@RequestBody SocialUserVo socialUser) throws Exception {
+        MemberEntity member =memberService.login(socialUser);
+        if (member!=null){
+            return R.ok().setData(member);//调用方接收返回值
         }else {
             return R.error(BizCodeEnume.LOGINACCT_PASSWORD_INVAILD_EXCEPTION.getCode(),BizCodeEnume.LOGINACCT_PASSWORD_INVAILD_EXCEPTION.getMsg());
         }

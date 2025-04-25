@@ -34,6 +34,7 @@ public class R<T> extends HashMap<String, Object> {
 		return t;
 	}
 
+
 	public R setData(Object data){
 		put("data",data);
 		return this;

@@ -56,7 +56,7 @@ public class SpuInfoController {
     }
 
     /**
-     * 保存   这个targer文件夹，是编译后的目录，每次该代码和配置，最好把他删了再启动okokok
+     * 保存
      */
     @RequestMapping("/save")
     public R save(@RequestBody SpuSaveVo vo){
@@ -66,7 +66,7 @@ public class SpuInfoController {
     }
 
     /**
-     * 修改 提交没问题，，了解
+     * 修改
      */
     @RequestMapping("/update")
     public R update(@RequestBody SpuInfoEntity spuInfo){

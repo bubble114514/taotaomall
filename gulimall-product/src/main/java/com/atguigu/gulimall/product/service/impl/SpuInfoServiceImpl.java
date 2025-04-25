@@ -1,6 +1,5 @@
 package com.atguigu.gulimall.product.service.impl;
 
-import com.alibaba.fastjson.TypeReference;
 import com.atguigu.common.constant.ProductConstant;
 import com.atguigu.common.to.SkuHasStockVo;
 import com.atguigu.common.to.SkuReductionTo;
@@ -333,7 +332,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         } else {
             // 远程调用失败
             // todo 7、重复调用？接口幂等性；重试机制？xxx
-            log.error("远程调用失败");
+            log.error("search远程调用失败");
         }
     }
 

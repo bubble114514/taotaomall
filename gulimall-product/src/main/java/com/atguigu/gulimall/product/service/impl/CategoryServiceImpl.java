@@ -12,7 +12,9 @@ import com.atguigu.gulimall.product.vo.Catelog2Vo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
+import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -44,6 +47,22 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
     private StringRedisTemplate redisTemplate;
     @Autowired
     RedissonClient redisson;
+
+    // 布隆过滤器
+    private RBloomFilter<String> categoryBloomFilter;
+    @PostConstruct
+    public void initBloomFilter() {
+        // 初始化布隆过滤器
+        categoryBloomFilter = redisson.getBloomFilter("categoryBloomFilter");
+        // 预期元素数量10万，误判率1%
+        categoryBloomFilter.tryInit(100000L, 0.01);
+
+        // 加载所有分类ID
+        List<CategoryEntity> allCategories = baseMapper.selectList(null);
+        allCategories.forEach(c ->
+                categoryBloomFilter.add(c.getCatId().toString())
+        );
+    }
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -208,7 +227,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
     //  1）、升级lettuce客户端 2）、切换使用jedis
     //
     //@Override
-    public Map<String, List<Catelog2Vo>> getCatalogJson2() {
+    public Map<String, List<Catelog2Vo>> getCatalogJsonByRedis() {
         //给缓冲中放JSON字符串，拿出的JSON字符串还要逆转为能用的对象类型【序列化与反序列化】
 
         /**
@@ -243,61 +262,72 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
      */
     //分布式锁查数据库
     public Map<String, List<Catelog2Vo>> getCatalogJsonFromDbWithRedissonLock() {
-        //1、注意锁的名字。锁的粒度越细越快
-        //锁的粒度：具体缓存的是某个数据
-        RLock lock = redisson.getLock("catalogJson-lock");
-        lock.lock();
+        // 1. 先尝试无锁读缓存
+        String catelogJson = redisTemplate.opsForValue().get("catelogJson");
+        if (!StringUtils.isEmpty(catelogJson)) {
+            return JSON.parseObject(catelogJson, new TypeReference<Map<String, List<Catelog2Vo>>>() {});
+        }
 
-        Map<String, List<Catelog2Vo>> dataFromDb;
+        // 2. 布隆过滤器检查（防缓存穿透）
+        if (!categoryBloomFilter.contains("catelogJson")) {
+            log.warn("布隆过滤器拦截非法请求");
+            redisTemplate.opsForValue().set("catelogJson", "{}", 5, TimeUnit.MINUTES);
+            return Collections.emptyMap();
+        }
+
+        // 3. 获取读写锁（读锁）
+        RReadWriteLock readWriteLock = redisson.getReadWriteLock("catalogJson-rw-lock");
+        RLock readLock = readWriteLock.readLock();
+
         try {
-            dataFromDb = getDataFromDb();
+            // 3.1 加读锁（非阻塞式尝试）
+            if (readLock.tryLock(10, 30, TimeUnit.SECONDS)) {
+                // 4. 双重检查缓存
+                catelogJson = redisTemplate.opsForValue().get("catelogJson");
+                if (!StringUtils.isEmpty(catelogJson)) {
+                    return JSON.parseObject(catelogJson, new TypeReference<Map<String, List<Catelog2Vo>>>() {});
+                }
+
+                // 5. 查询数据库
+                Map<String, List<Catelog2Vo>> dataFromDb = getDataFromDb();
+
+                // 6. 获取写锁升级（注意：必须先释放读锁）
+                readLock.unlock();
+                RLock writeLock = readWriteLock.writeLock();
+                try {
+                    if (writeLock.tryLock(10, 30, TimeUnit.SECONDS)) {
+                        // 7. 再次双重检查（防止其他线程已更新）
+                        catelogJson = redisTemplate.opsForValue().get("catelogJson");
+                        if (!StringUtils.isEmpty(catelogJson)) {
+                            return JSON.parseObject(catelogJson, new TypeReference<Map<String, List<Catelog2Vo>>>() {});
+                        }
+
+                        // 8. 写入缓存（设置随机过期时间防雪崩）
+                        String jsonString = JSON.toJSONString(dataFromDb);
+                        int randomOffset = new Random().nextInt(4 * 3600);
+                        redisTemplate.opsForValue().set(
+                                "catelogJson",
+                                jsonString,
+                                24 * 3600 + randomOffset,
+                                TimeUnit.SECONDS
+                        );
+                        return dataFromDb;
+                    }
+                } finally {
+                    if (writeLock.isHeldByCurrentThread()) {
+                        writeLock.unlock();
+                    }
+                }
+            }
+            throw new RuntimeException("获取锁失败，请重试");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("操作被中断", e);
         } finally {
-            lock.unlock();
-        }
-
-        return dataFromDb;
-
-
-    }
-
-    public Map<String, List<Catelog2Vo>> getCatalogJsonFromDbWithRedisLock() {
-        //1、占分布式锁，去redis占坑，去redis设置过期时间，防止死锁
-        String uuid = UUID.randomUUID().toString();
-        Boolean lock = redisTemplate.opsForValue().setIfAbsent("lock", uuid, 300, TimeUnit.SECONDS);
-        if (Boolean.TRUE.equals(lock)) {
-            System.out.println("获取分布式锁成功。。。");
-            //加锁成功，执行业务
-            //2、设置过期时间，必须和加锁是同步的，原子的
-//            redisTemplate.expire("lock", 30, TimeUnit.SECONDS);
-            //执行业务
-            Map<String, List<Catelog2Vo>> dataFromDb;
-            try {
-                dataFromDb = getDataFromDb();
-            } finally {
-                String script = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
-                //删除锁
-                Long lock1 = redisTemplate.execute(new DefaultRedisScript<Long>(script, Long.class), Arrays.asList("lock", uuid));
+            if (readLock.isHeldByCurrentThread()) {
+                readLock.unlock();
             }
-
-            //获取值对比+对比成功删除=原子操作  Lua脚本解锁
-//            String lockValue=redisTemplate.opsForValue().get("lock");
-//            if (Objects.equals(lockValue,uuid)){
-//                redisTemplate.delete("lock");//释放锁
-//            }
-
-            return dataFromDb;
-        } else {
-            System.out.println("获取分布式锁失败。。。等待重试");
-            //加锁失败，重试。synchronized()
-            //休眠100ms重试
-            try {
-                Thread.sleep(200);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return getCatalogJsonFromDbWithRedisLock();//自旋
         }
-
     }
 
     private Map<String, List<Catelog2Vo>> getDataFromDb() {
@@ -346,6 +376,47 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
 
         return parent_cid;
     }
+
+    public Map<String, List<Catelog2Vo>> getCatalogJsonFromDbWithRedisLock() {
+        //1、占分布式锁，去redis占坑，去redis设置过期时间，防止死锁
+        String uuid = UUID.randomUUID().toString();
+        Boolean lock = redisTemplate.opsForValue().setIfAbsent("lock", uuid, 300, TimeUnit.SECONDS);
+        if (Boolean.TRUE.equals(lock)) {
+            System.out.println("获取分布式锁成功。。。");
+            //加锁成功，执行业务
+            //2、设置过期时间，必须和加锁是同步的，原子的
+//            redisTemplate.expire("lock", 30, TimeUnit.SECONDS);
+            //执行业务
+            Map<String, List<Catelog2Vo>> dataFromDb;
+            try {
+                dataFromDb = getDataFromDb();
+            } finally {
+                String script = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
+                //删除锁
+                Long lock1 = redisTemplate.execute(new DefaultRedisScript<Long>(script, Long.class), Arrays.asList("lock", uuid));
+            }
+
+            //获取值对比+对比成功删除=原子操作  Lua脚本解锁
+//            String lockValue=redisTemplate.opsForValue().get("lock");
+//            if (Objects.equals(lockValue,uuid)){
+//                redisTemplate.delete("lock");//释放锁
+//            }
+
+            return dataFromDb;
+        } else {
+            System.out.println("获取分布式锁失败。。。等待重试");
+            //加锁失败，重试。synchronized()
+            //休眠100ms重试
+            try {
+                Thread.sleep(200);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return getCatalogJsonFromDbWithRedisLock();//自旋
+        }
+
+    }
+
 
     // 从数据库查询并封装分类数据（本地锁）
     public Map<String, List<Catelog2Vo>> getCatalogJsonFromDbWithLocalLock() {

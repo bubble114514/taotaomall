@@ -32,6 +32,7 @@ public class ProductSaveServiceImpl implements ProductSaveService {
         //保存到es
         //1、给es中建立索引，product，建立好映射关系
 
+
         //2、给es中保存这些数据
         BulkRequest bulkRequest = new BulkRequest();
         for (SkuEsModel model : skuEsModels) {
@@ -46,6 +47,7 @@ public class ProductSaveServiceImpl implements ProductSaveService {
         BulkResponse bulk = restHighLevelClient.bulk(bulkRequest, GulimallElasticConfig.COMMON_OPTIONS);
 
         //TODO 如果批量错误
+
         boolean b = bulk.hasFailures();
         List<String> collect = Arrays.stream(bulk.getItems()).map(BulkItemResponse::getId).collect(Collectors.toList());
         log.info("商品上架完成：{}", collect);

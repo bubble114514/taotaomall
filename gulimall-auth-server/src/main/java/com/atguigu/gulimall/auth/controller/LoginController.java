@@ -4,6 +4,7 @@ import com.alibaba.fastjson.TypeReference;
 import com.atguigu.common.constant.AuthServerConstant;
 import com.atguigu.common.exception.BizCodeEnume;
 import com.atguigu.common.utils.R;
+import com.atguigu.common.vo.MemberRespVo;
 import com.atguigu.common.vo.UserLoginVo;
 import com.atguigu.common.vo.UserRegistVo;
 import com.atguigu.gulimall.auth.feign.MemberFeignService;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,14 +30,17 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static com.atguigu.common.constant.AuthServerConstant.LOGIN_USER;
+
 @Controller
-public class loginController {
+public class LoginController {
     @Autowired
     private ThirdPartFeignService thirdPartFeignService;
     @Autowired
     StringRedisTemplate redisTemplate;
     @Autowired
     MemberFeignService memberFeignService;
+
 
     /**
      * 发送一个请求直接跳转到一个页面
@@ -126,11 +131,24 @@ public class loginController {
         return null;
     }
 
+    @GetMapping("/login.html")
+    public String loginPage(HttpSession session) {
+        Object attribute = session.getAttribute(LOGIN_USER);
+        if (attribute != null) {
+            return "redirect:http://gulimall.com";
+        }
+        return "login";
+    }
+
     @PostMapping("/login")
-    public String login(UserLoginVo vo,RedirectAttributes redirectAttributes) {
+    public String login(UserLoginVo vo,RedirectAttributes redirectAttributes, HttpSession session) {
         // 远程登录
         R r = memberFeignService.login(vo);
         if (r.getCode()==0){
+            // 登录成功
+            MemberRespVo data= (MemberRespVo) r.getData("data", new TypeReference<MemberRespVo>() {
+            });
+            session.setAttribute(LOGIN_USER,data);
             return "redirect:http://gulimall.com";
         }else {
             Map<String, String> errors = new HashMap<>();

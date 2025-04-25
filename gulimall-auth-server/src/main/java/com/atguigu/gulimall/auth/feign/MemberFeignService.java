@@ -1,6 +1,7 @@
 package com.atguigu.gulimall.auth.feign;
 
 import com.atguigu.common.utils.R;
+import com.atguigu.common.vo.SocialUserVo;
 import com.atguigu.common.vo.UserLoginVo;
 import com.atguigu.common.vo.UserRegistVo;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -13,4 +14,9 @@ public interface MemberFeignService {
     R register(@RequestBody UserRegistVo vo);
     @PostMapping("/member/member/login")
     R login(@RequestBody UserLoginVo vo);
+    /**
+     * 微博社交登录
+     */
+    @PostMapping("/member/member/weibo/oauth2/login")
+    R oauthLogin(@RequestBody SocialUserVo user);
 }

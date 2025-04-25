@@ -2,6 +2,7 @@ package com.atguigu.gulimall.member.service;
 
 import com.atguigu.common.vo.MemberLoginVo;
 import com.atguigu.common.vo.MemberRegistVo;
+import com.atguigu.common.vo.SocialUserVo;
 import com.atguigu.gulimall.member.exception.PhoneExistException;
 import com.atguigu.gulimall.member.exception.UsernameExistException;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -30,6 +31,6 @@ public interface MemberService extends IService<MemberEntity> {
     MemberEntity login(MemberLoginVo vo);
 
 
-
+    MemberEntity login(SocialUserVo socialUser) throws Exception;
 }
 
