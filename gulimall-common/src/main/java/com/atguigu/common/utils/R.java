@@ -26,12 +26,13 @@ public class R<T> extends HashMap<String, Object> {
 		T t = JSON.parseObject(s, typeReference);
 		return t;
 	}
-	public <T> T getData(String key,TypeReference<T> typeReference){
-		//默认是map
+	public <T> T getData(String key, TypeReference<T> typeReference) {
 		Object data = get(key);
-		String s = JSON.toJSONString(data);
-		T t = JSON.parseObject(s, typeReference);
-		return t;
+		if (data == null) {
+			return null;
+		}
+		String jsonString = JSON.toJSONString(data);
+		return JSON.parseObject(jsonString, typeReference);
 	}
 
 

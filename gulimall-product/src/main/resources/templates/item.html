@@ -1357,27 +1357,75 @@
 </script>
 
 <script>
-    $(".sku_attr_value").click(function () {
-        // 1、点击的元素添加上自定义的属性
-        let skus = new Array();
-        let curr = $(this).attr("skus").split(",");
-
+    $(".sku_attr_value").click(function() {
+        // 1. 更新选中样式
         $(this).parent().parent().find(".sku_attr_value").removeClass("checked");
         $(this).addClass("checked");
         changeCheckedStyle();
 
-        $("a[class='sku_attr_value checked']").each(function () {
-            skus.push($(this).attr("skus").split(","));
+        // 2. 收集所有选中的属性值
+        let selectedAttrs = [];
+        $("a.sku_attr_value.checked").each(function() {
+            let skus = $(this).attr("skus");
+            if (skus && skus !== "undefined") {
+                selectedAttrs.push(skus.split(","));
+            }
         });
 
-        let filterEle = skus[0];
-        for (let i = 1; i < skus.length; i++) {
-            filterEle = $(filterEle).filter(skus[i])[0];
+        // 3. 如果没有选中任何属性，不执行跳转
+        if (selectedAttrs.length === 0) {
+            return false;
         }
 
-        location.href = "http://item.gulimall.com/" + filterEle + ".html";
+        // 4. 找出所有选中属性共有的SKU ID
+        let matchedSkus = selectedAttrs[0];
+        for (let i = 1; i < selectedAttrs.length; i++) {
+            matchedSkus = matchedSkus.filter(sku =>
+                selectedAttrs[i].includes(sku)
+            );
+        }
+
+        // 5. 如果有匹配的SKU，跳转到对应商品页
+        if (matchedSkus.length > 0) {
+            // 取第一个匹配的SKU
+            let targetSkuId = matchedSkus[0];
+            // 确保当前不是已经在目标页面
+            if (window.location.pathname !== "/" + targetSkuId + ".html") {
+                window.location.href = "http://item.gulimall.com/" + targetSkuId + ".html";
+            }
+        } else {
+            // 6. 没有匹配SKU的处理
+            console.log("没有找到匹配的商品组合");
+            // 可以显示提示信息，或者保持当前页面不变
+        }
 
         return false;
+    });
+    // 更新选中样式的函数
+    function changeCheckedStyle() {
+        $(".sku_attr_value").parent().css({"border": "solid 1px #ccc"});
+        $("a.sku_attr_value.checked").parent().css({"border": "solid 1px red"});
+    }
+
+    // 初始化时设置当前SKU为选中状态
+    function initSkuSelection() {
+        // 从URL中获取当前SKU ID
+        let path = window.location.pathname;
+        let currentSkuId = path.split("/").pop().replace(".html", "");
+
+        // 找到包含当前SKU的属性值并设置为选中
+        $("a.sku_attr_value").each(function() {
+            let skus = $(this).attr("skus");
+            if (skus && skus.includes(currentSkuId)) {
+                $(this).addClass("checked");
+            }
+        });
+        changeCheckedStyle();
+    }
+
+    // 页面加载时初始化
+    $(function() {
+        initSkuSelection();
     });
     $(function () {
         changeCheckedStyle();
