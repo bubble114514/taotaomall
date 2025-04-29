@@ -1,5 +1,6 @@
 package com.atguigu.gulimall.order;
 
+import com.atguigu.gulimall.order.entity.OrderEntity;
 import com.atguigu.gulimall.order.entity.OrderReturnReasonEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -9,27 +10,40 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Date;
+import java.util.UUID;
 
 @Slf4j
 @SpringBootTest
 class GulimallOrderApplicationTests {
-    @Autowired
-    private AmqpAdmin amqpAdmin;
-    @Autowired
-    private RabbitTemplate rabbitTemplate;
+//    @Autowired
+//    private AmqpAdmin amqpAdmin;
+//    @Autowired
+//    private RabbitTemplate rabbitTemplate;
 
     @Test
     public void sendMessage() {
-        OrderReturnReasonEntity reasonEntity = new OrderReturnReasonEntity();
-        reasonEntity.setId(1L);
-        reasonEntity.setCreateTime(new Date());
-        reasonEntity.setName("哈哈");
+
 
         //1、发送消息,如果发送的消息是对象，会使用序列化机制，将对象写出去。对象必须实现Serializable接口
         String msg = "Hello World";
         //2、发送的对象类型的消息可以是一个JSON
-        rabbitTemplate.convertAndSend("hello-java-exchange", "hello.java", reasonEntity);
-        log.info("消息发送完毕...{}",reasonEntity);
+//        for (int i = 0; i < 10; i++){
+//            if (i % 2 == 0){
+//                OrderReturnReasonEntity reasonEntity = new OrderReturnReasonEntity();
+//                reasonEntity.setId(1L);
+//                reasonEntity.setCreateTime(new Date());
+//                reasonEntity.setName("哈哈--" + i);
+//                rabbitTemplate.convertAndSend("hello-java-exchange", "hello.java", reasonEntity);
+//            }else {
+//                OrderEntity orderEntity = new OrderEntity();
+//                orderEntity.setOrderSn(UUID.randomUUID().toString());
+//                orderEntity.setCreateTime(new Date());
+//                rabbitTemplate.convertAndSend("hello-java-exchange", "hello.java", orderEntity);
+//            }
+//            log.info("消息发送完毕...{}");
+//        }
+
+
     }
 
     /**
