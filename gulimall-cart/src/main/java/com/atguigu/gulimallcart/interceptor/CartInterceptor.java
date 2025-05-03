@@ -2,11 +2,10 @@ package com.atguigu.gulimallcart.interceptor;
 
 
 import com.atguigu.common.constant.AuthServerConstant;
-import com.atguigu.common.constant.CartConstant;
+import com.atguigu.common.constant.cart.CartConstant;
 import com.atguigu.common.vo.MemberRespVo;
 import com.atguigu.gulimallcart.vo.UserInfoTo;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -25,6 +24,7 @@ public class CartInterceptor implements HandlerInterceptor {
 
     /**
      * 业务执行之前
+     *
      * @param request
      * @param response
      * @param handler
@@ -54,7 +54,7 @@ public class CartInterceptor implements HandlerInterceptor {
             }
         }
         // 如果没有临时用户，一定分配一个临时用户
-        if (StringUtils.isEmpty(userInfoTo.getUserKey())){
+        if (StringUtils.isEmpty(userInfoTo.getUserKey())) {
             String UUID = java.util.UUID.randomUUID().toString();
             userInfoTo.setUserKey(UUID);
         }
@@ -65,6 +65,7 @@ public class CartInterceptor implements HandlerInterceptor {
 
     /**
      * 业务执行之后
+     *
      * @param request
      * @param response
      * @param handler
@@ -76,7 +77,7 @@ public class CartInterceptor implements HandlerInterceptor {
         UserInfoTo userInfoTo = threadLocal.get();
 
         // 临时用户
-        if (!userInfoTo.isTempUser()){
+        if (userInfoTo != null && !userInfoTo.isTempUser()) {
             Cookie cookie = new Cookie(CartConstant.TEMP_USER_COOKIE_NAME, userInfoTo.getUserKey());
             cookie.setDomain("gulimall.com");
             cookie.setMaxAge(CartConstant.TEMP_USER_COOKIE_TIMEOUT);

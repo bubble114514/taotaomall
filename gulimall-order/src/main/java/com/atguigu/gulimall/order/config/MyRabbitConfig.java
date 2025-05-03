@@ -52,7 +52,7 @@ public class MyRabbitConfig {
             //CorrelationData当前消息的唯一关联数据（消息的唯一id）
             //ack消息是否成功收到
             //cause失败原因
-            System.out.println("confirm...CorrelationData==>["+data+"]ack===>"+"["+ack+"]"+"cause===>["+cause+"]");
+//            System.out.println("confirm...CorrelationData==>["+data+"]ack===>"+"["+ack+"]"+"cause===>["+cause+"]");
         });
         //设置消息抵达队列回调
         rabbitTemplate.setReturnsCallback(new RabbitTemplate.ReturnsCallback() {

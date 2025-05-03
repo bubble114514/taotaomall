@@ -16,7 +16,7 @@ public class Cart {
 
     private BigDecimal totalAmount;//总价
 
-    private BigDecimal reduce=new BigDecimal(0);//减免价格
+    private BigDecimal reduce = new BigDecimal(0);//减免价格
 
     public List<CartItem> getItems() {
         return items;
@@ -28,7 +28,7 @@ public class Cart {
 
     public Integer getCountNum() {
         int countNum = 0;
-        if (items != null&& items.size() > 0){
+        if (items != null && items.size() > 0) {
             for (CartItem item : items) {
                 countNum += item.getCount();
             }
@@ -42,7 +42,7 @@ public class Cart {
 
     public Integer getCountType() {
         int countType = 0;
-        if (items != null&& items.size() > 0){
+        if (items != null && items.size() > 0) {
             for (CartItem item : items) {
                 countType += 1;
             }
@@ -57,11 +57,14 @@ public class Cart {
     public BigDecimal getTotalAmount() {
         BigDecimal totalAmount = new BigDecimal(0);
         //1、遍历购物车所有商品，计算购物项总价
-        if (items != null&& items.size() > 0){
+        if (items != null && items.size() > 0) {
             for (CartItem item : items) {
-                //总价
-                item.getTotalPrice().multiply(new BigDecimal(item.getCount()));
-                totalAmount = totalAmount.add(item.getTotalPrice());
+                if (item.getCheck()) {
+                    //总价
+                    item.getTotalPrice().multiply(new BigDecimal(item.getCount()));
+                    totalAmount = totalAmount.add(item.getTotalPrice());
+                }
+
             }
         }
 
@@ -69,7 +72,6 @@ public class Cart {
         return totalAmount.subtract(getReduce());
 
     }
-
 
 
     public BigDecimal getReduce() {

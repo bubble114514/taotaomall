@@ -20,4 +20,6 @@ public class WareMyBatisConfig {
         paginationInterceptor.setLimit(1000);
         return paginationInterceptor;
     }
+
+
 }

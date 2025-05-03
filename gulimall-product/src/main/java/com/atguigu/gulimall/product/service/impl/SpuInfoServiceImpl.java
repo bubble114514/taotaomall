@@ -1,6 +1,6 @@
 package com.atguigu.gulimall.product.service.impl;
 
-import com.atguigu.common.constant.ProductConstant;
+import com.atguigu.common.constant.product.ProductConstant;
 import com.atguigu.common.to.SkuHasStockVo;
 import com.atguigu.common.to.SkuReductionTo;
 import com.atguigu.common.to.SpuBoundTo;
@@ -334,6 +334,14 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
             // todo 7、重复调用？接口幂等性；重试机制？xxx
             log.error("search远程调用失败");
         }
+    }
+
+    @Override
+    public SpuInfoEntity getSpuInfoBySkuId(Long skuId) {
+
+        SkuInfoEntity skuInfoEntity = skuInfoService.getById(skuId);
+        Long spuId=skuInfoEntity.getSpuId();
+        return this.getById(spuId);
     }
 
 

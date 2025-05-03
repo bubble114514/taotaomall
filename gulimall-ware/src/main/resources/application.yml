@@ -11,6 +11,25 @@ spring:
     nacos:
       discovery:
         server-addr: 127.0.0.1:8848
+#    alibaba:
+#      seata:
+#        tx-service-group: jilin #配置事务分组
+#        #  配置seata注册中心，告诉微服务（seata client）怎么去访问seata server(TC)
+#        registry:
+#          type: nacos
+#          nacos:
+#            server-addr: 127.0.0.1:8848 #seata server 所在的nacos服务地址
+#            application: seata-server-gulimall-ware #seata server 的服务名 默认为seata-server 如果未修改可不配置
+#            username: nacos #nacos username
+#            password: nacos #nacos password
+#            group: SEATA_GROUP #seata server 所在分组名称，默认是 SEATA_GROUP ，没有修改可以不配置
+#        config:
+#          type: nacos
+#          nacos:
+#            server-addr: 127.0.0.1:8848 #seata server 所在的nacos服务地址
+#            username: nacos #nacos username
+#            password: nacos #nacos password
+#            group: SEATA_GROUP #seata server 所在分组名称，默认是 SEATA_GROUP ，没有修改可以不配置
   application:
     name: gulimall-ware
 mybatis-plus:

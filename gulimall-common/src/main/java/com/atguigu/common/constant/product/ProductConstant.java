@@ -1,4 +1,4 @@
-package com.atguigu.common.constant;
+package com.atguigu.common.constant.product;
 
 public class ProductConstant {
     public enum AttrEnum {

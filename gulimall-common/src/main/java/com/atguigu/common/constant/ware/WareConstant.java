@@ -1,4 +1,4 @@
-package com.atguigu.common.constant;
+package com.atguigu.common.constant.ware;
 
 public class WareConstant {
     public enum PurchaseStatusEnum {

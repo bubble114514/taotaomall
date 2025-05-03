@@ -1,6 +1,6 @@
 package com.atguigu.gulimall.product.service.impl;
 
-import com.atguigu.common.constant.ProductConstant;
+import com.atguigu.common.constant.product.ProductConstant;
 import com.atguigu.common.utils.PageUtils;
 import com.atguigu.common.utils.Query;
 import com.atguigu.gulimall.product.dao.AttrAttrgroupRelationDao;
@@ -29,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 
 @Service("attrService")
