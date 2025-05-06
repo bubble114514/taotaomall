@@ -636,29 +636,7 @@
                             </dd>
                         </dl>
                     </div>
-                    <!--							<div class="box-attr-2 clear">-->
-                    <!--								<dl>-->
-                    <!--									<dt>选择版本</dt>-->
-                    <!--									<dd>-->
-                    <!--										<a href="/static/item/#">标准版</a>-->
-                    <!--									</dd>-->
-                    <!--									<dd>-->
-                    <!--										<a href="/static/item/#">套装版</a>-->
-                    <!--									</dd>-->
-                    <!--								</dl>-->
-                    <!--							</div>-->
 
-                    <!--							<div class="box-attr-2 clear">-->
-                    <!--								<dl>-->
-                    <!--									<dt>选择内存</dt>-->
-                    <!--									<dd>-->
-                    <!--										<a href="/static/item/#">64GB</a>-->
-                    <!--									</dd>-->
-                    <!--									<dd>-->
-                    <!--										<a href="/static/item/#">128GB</a>-->
-                    <!--									</dd>-->
-                    <!--								</dl>-->
-                    <!--							</div>-->
                 </div>
 
                 <div class="box-btns clear">
@@ -680,7 +658,7 @@
                         </div>
                     </div>
 
-                    <div class="box-btns-two" th:if="${item.seckillSku == null }">
+                    <div class="box-btns-two" th:if="${item.seckillSku == null || (#dates.createNow().getTime()<item.seckillSku.startTime)||(#dates.createNow().getTime()>item.seckillSku.endTime)}">
                         <a class="addToCart" href="#" th:attr="skuId=${item.info.skuId}">
                             加入购物车
                         </a>
@@ -726,7 +704,7 @@
     <!--欲约抢购流程-->
     <div class="qianggoulioucheng">
         <div class="lioucheng">
-            <h3>欲约抢购流程</h3>
+            <h3>预约抢购流程</h3>
         </div>
         <!--抢购步骤-->
         <ul class="qianggoubuzhao">

@@ -52,39 +52,39 @@ class GulimallOrderApplicationTests {
      *      2）、通过SpringProvide自动创建
      * 2、如何收发消息
      */
-    @Test
-    void createExchange() {
-        //amqpAdmin
-        //Exchange
-        /**
-         * Direct Exchange(String name, boolean durable, boolean autoDelete, Map<String, Object> arguments )
-         */
-        DirectExchange directExchange = new DirectExchange("hello-java-exchange", true, false);
-        amqpAdmin.declareExchange(directExchange);
-        log.info("Exchange[{}]创建成功", "hello-java-exchange");
-    }
-
-    @Test
-    void creatQueue(){
-        Queue queue = new Queue("hello-java-queue",  true, false, false);
-        amqpAdmin.declareQueue(queue);
-        log.info("Exchange[{}]创建成功", "hello-java-queue");
-    }
-
-    @Test
-    void createBinding(){
-        // String destination【目的地】,
-        // DestinationType destinationType【目的地类型】,
-        // String exchange【交换机】,
-        // String routingKey【路由键】,
-        // Map<String, Object> arguments【参数】
-        Binding binding = new Binding("hello-java-queue",
-                Binding.DestinationType.QUEUE,
-                "hello-java-exchange",
-                "hello.java",
-                null);
-        amqpAdmin.declareBinding(binding);
-        log.info("Binding[{}]创建成功", "hello-java-binding");
-    }
+//    @Test
+//    void createExchange() {
+//        //amqpAdmin
+//        //Exchange
+//        /**
+//         * Direct Exchange(String name, boolean durable, boolean autoDelete, Map<String, Object> arguments )
+//         */
+//        DirectExchange directExchange = new DirectExchange("hello-java-exchange", true, false);
+//        amqpAdmin.declareExchange(directExchange);
+//        log.info("Exchange[{}]创建成功", "hello-java-exchange");
+//    }
+//
+//    @Test
+//    void creatQueue(){
+//        Queue queue = new Queue("hello-java-queue",  true, false, false);
+//        amqpAdmin.declareQueue(queue);
+//        log.info("Exchange[{}]创建成功", "hello-java-queue");
+//    }
+//
+//    @Test
+//    void createBinding(){
+//        // String destination【目的地】,
+//        // DestinationType destinationType【目的地类型】,
+//        // String exchange【交换机】,
+//        // String routingKey【路由键】,
+//        // Map<String, Object> arguments【参数】
+//        Binding binding = new Binding("hello-java-queue",
+//                Binding.DestinationType.QUEUE,
+//                "hello-java-exchange",
+//                "hello.java",
+//                null);
+//        amqpAdmin.declareBinding(binding);
+//        log.info("Binding[{}]创建成功", "hello-java-binding");
+//    }
 
 }

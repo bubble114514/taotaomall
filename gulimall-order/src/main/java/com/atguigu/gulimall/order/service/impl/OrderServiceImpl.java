@@ -4,6 +4,7 @@ package com.atguigu.gulimall.order.service.impl;
 import com.alibaba.fastjson.TypeReference;
 import com.atguigu.common.constant.order.OrderConstant;
 import com.atguigu.common.to.mq.OrderTo;
+import com.atguigu.common.to.mq.SeckillOrderTo;
 import com.atguigu.common.utils.PageUtils;
 import com.atguigu.common.utils.Query;
 import com.atguigu.common.utils.R;
@@ -230,9 +231,32 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                 rabbitTemplate.convertAndSend("order-event-exchange", "order.release.other", orderTo);
             }catch (Exception e){
                 //TODO 将没发送成功的消息重试发送
+                rabbitTemplate.convertAndSend("order-event-exchange", "order.release.other", orderTo);
 
             }
         }
+    }
+
+    @Override
+    public void createSeckillOrder(SeckillOrderTo seckillOrder) {
+        //TODO 保存订单信息
+        OrderEntity orderEntity = new OrderEntity();
+        orderEntity.setMemberId(seckillOrder.getMemberId());
+        orderEntity.setStatus(OrderConstant.OrderStatusEnum.CREATE_NEW.getCode());
+        orderEntity.setOrderSn(seckillOrder.getOrderSn());
+        orderEntity.setCreateTime(new Date());
+        orderEntity.setPayAmount(seckillOrder.getSeckillPrice().multiply(new BigDecimal(seckillOrder.getNum())));
+
+        this.save(orderEntity);
+
+        //TODO 保存订单项
+        OrderItemEntity orderItemEntity = new OrderItemEntity();
+        orderItemEntity.setOrderSn(seckillOrder.getOrderSn());
+        orderItemEntity.setRealAmount(seckillOrder.getSeckillPrice().multiply(new BigDecimal(seckillOrder.getNum())));
+        orderItemEntity.setSkuId(seckillOrder.getSkuId());
+        orderItemEntity.setSkuQuantity(seckillOrder.getNum());
+//       TODO 获取当前sku详细信息  productFeignService.getSpuInfoBySkuId(seckillOrder.getSkuId());
+        orderItemService.save(orderItemEntity);
     }
 
     /**

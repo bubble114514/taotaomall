@@ -1,5 +1,6 @@
 package com.atguigu.gulimall.order.config;
 
+import com.alibaba.druid.sql.visitor.functions.Bin;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.Exchange;
 import org.springframework.amqp.core.Queue;
@@ -13,9 +14,6 @@ import java.util.Map;
 
 @Configuration
 public class MyMQConfig {
-
-
-
 
     /**
      * @Bean:容器中的Binding，Queue，Exchange 都会自动创建（RabbitMQ没有的情况）
@@ -65,6 +63,24 @@ public class MyMQConfig {
                 Binding.DestinationType.QUEUE,
                 "order-event-exchange",
                 "order.release.other.#",
+                null);
+    }
+
+    /**
+     * 秒杀订单队列
+     * 削峰处理
+     */
+    @Bean
+    public Queue orderSeckillOrderQueue(){
+        return new Queue("order.seckill.order.queue", true, false, false);
+    }
+
+    @Bean
+    public Binding orderSeckillOrderQueueBinding(){
+        return new Binding("order.seckill.order.queue",
+                Binding.DestinationType.QUEUE,
+                "order-event-exchange",
+                "order.seckill.order",
                 null);
     }
 }

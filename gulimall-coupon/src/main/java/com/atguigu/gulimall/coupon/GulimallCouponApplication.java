@@ -3,6 +3,7 @@ package com.atguigu.gulimall.coupon;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 
 
 /***
@@ -46,7 +47,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  *        @ConfigureProperties(prefix = "spring.datasource")：指定配置文件的哪部分内容，映射到这个对象中
  *
  */
-
+@EnableFeignClients
 @EnableDiscoveryClient
 @SpringBootApplication
 public class GulimallCouponApplication {

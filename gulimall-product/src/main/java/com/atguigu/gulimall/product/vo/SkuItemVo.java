@@ -23,11 +23,8 @@ public class SkuItemVo {
     List<SpuItemBaseAttrGroupVo> groupAttrs;
     private boolean hasStock = true;
 
-    private SeckillSku seckillSku;
+    private SeckillInfoVo seckillSku;
 
-    @Data
-    public static class SeckillSku {
-    }
 
 
 }
