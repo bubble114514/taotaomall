@@ -8,7 +8,7 @@ import com.atguigu.gulimall.product.dao.SkuInfoDao;
 import com.atguigu.gulimall.product.entity.SkuImagesEntity;
 import com.atguigu.gulimall.product.entity.SkuInfoEntity;
 import com.atguigu.gulimall.product.entity.SpuInfoDescEntity;
-import com.atguigu.gulimall.product.feign.ScokillFeignService;
+import com.atguigu.gulimall.product.feign.SeckillFeignService;
 import com.atguigu.gulimall.product.service.*;
 import com.atguigu.gulimall.product.vo.SeckillInfoVo;
 import com.atguigu.gulimall.product.vo.SkuItemSaleAttrVo;
@@ -43,7 +43,7 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
     @Autowired
     ThreadPoolExecutor executor;
     @Autowired
-    ScokillFeignService scokillFeignService;
+    SeckillFeignService seckillFeignService;
 
 
     @Override
@@ -143,7 +143,7 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
 
         //查询当前商品是否参与秒杀
         CompletableFuture<Void> seckillFuture = CompletableFuture.runAsync(() -> {
-            R seckillInfo = scokillFeignService.getSekuSeckillInfo(skuId);
+            R seckillInfo = seckillFeignService.getSekuSeckillInfo(skuId);
             if (seckillInfo.getCode() == 0){
                 SeckillInfoVo data = (SeckillInfoVo) seckillInfo.getData("data", new TypeReference<SeckillInfoVo>() {
                 });

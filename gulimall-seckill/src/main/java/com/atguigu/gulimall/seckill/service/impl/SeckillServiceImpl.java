@@ -21,6 +21,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -134,76 +135,195 @@ public class SeckillServiceImpl implements SeckillService {
         return null;
     }
 
+
+//      //信号量扣减库存
+//    @Override
+//    public String kill(String killId, String key, Integer num)  {
+//        long s1=System.currentTimeMillis();
+//        MemberRespVo loginUser = LoginUserInterceptor.loginUser.get();
+//
+//        //1、获取当前秒杀商品信息
+//        BoundHashOperations<String, String, String> hashOps = redisTemplate.boundHashOps(SKUKILL_CACHE_PREFIX);
+//        String s = hashOps.get(killId);
+//        if (s == null) {
+//            return null;
+//        } else {
+//            SeckillSkuRedisTo redisTo = JSON.parseObject(s, SeckillSkuRedisTo.class);
+//            //校验合法性
+//            //1、验证时间合法性
+//            Long startTime = redisTo.getStartTime();
+//            Long endTime = redisTo.getEndTime();
+//            if (System.currentTimeMillis() >= startTime && System.currentTimeMillis() <= endTime) {
+//                //2、验证随机码和商品id
+//                String skuId = redisTo.getPromotionSessionId() + "_" + redisTo.getSkuId();
+//                if (redisTo.getRandomCode().equals(key) && killId.equals(skuId)) {
+//                    //3、验证购买数量是否超过限制
+//                    if (new BigDecimal(num).compareTo(redisTo.getSeckillLimit()) <= 0) {
+//                        //4、验证是否已购买过
+//                        //幂等性：如果秒杀成功就去redis占位
+//                        String redisKey = loginUser.getId() + "_" + skuId;
+//                        //自动过期
+//                        long ttl = endTime - System.currentTimeMillis();
+//
+//                        Boolean b = redisTemplate.opsForValue().setIfAbsent(redisKey, String.valueOf(num), ttl, TimeUnit.MILLISECONDS);
+//                        if (Boolean.TRUE.equals(b)){//占位成功，说明没有买过
+//                            RSemaphore semaphore = redissonClient.getSemaphore(SKU_STOCK_SEMAPHORE + redisTo.getRandomCode());
+//                            try {
+//                                boolean tryAcquire = semaphore.tryAcquire(num, 100, TimeUnit.MILLISECONDS);
+//                                if (tryAcquire) {
+//                                    //秒杀成功
+//                                    //快速下单：发送MQ消息
+//                                    String timeId = IdWorker.getTimeId();
+//                                    SeckillOrderTo orderTo = new SeckillOrderTo();
+//                                    orderTo.setOrderSn(timeId);
+//                                    orderTo.setMemberId(loginUser.getId());
+//                                    orderTo.setNum(num);
+//                                    orderTo.setPromotionSessionId(redisTo.getPromotionSessionId());
+//                                    orderTo.setSkuId(redisTo.getSkuId());
+//                                    orderTo.setSeckillPrice(redisTo.getSeckillPrice());
+//                                    rabbitTemplate.convertAndSend("order-event-exchange", "order.seckill.order", orderTo);
+//                                    long s2=System.currentTimeMillis();
+//                                    log.info("秒杀成功，耗时："+(s2-s1));
+//                                    return timeId;
+//                                }else {
+//                                    return "手慢了，秒杀失败";
+//                                }
+//                            } catch (InterruptedException e) {
+//                                return "手慢了，秒杀失败";
+//                            }
+//
+//                        }else {//占位失败，说明买过了
+//                            return "您已购买过此商品";
+//                        }
+//                    }else {
+//                        return "秒杀数量超过限额！";
+//                    }
+//                }else {
+//                    return "数据校验失败！";
+//                }
+//            }else {
+//                return "不在秒杀时间内！";
+//            }
+//        }
+//
+//    }
+
+    private static final String SECKILL_SCRIPT =
+            "local userId = ARGV[1]\n" +
+                    "local skuId = ARGV[2]\n" +
+                    "local num = tonumber(ARGV[3])\n" +
+                    "local randomCode = ARGV[4]\n" +
+                    "local sessionId = ARGV[5]\n" +
+                    "local orderKey = userId..'_'..sessionId..'_'..skuId\n" +
+                    "local stockKey = 'seckill:stock:skus:'..randomCode\n" +
+                    "local seckillKey = 'seckill:skus'\n" +
+                    "local itemKey = sessionId..'_'..skuId\n" +
+                    "\n" +
+                    "-- 1. 检查是否已购买\n" +
+                    "local bought = redis.call('get', orderKey)\n" +
+                    "if bought then\n" +
+                    "    return 0\n" +
+                    "end\n" +
+                    "\n" +
+                    "-- 2. 检查库存是否充足\n" +
+                    "local stock = tonumber(redis.call('get', stockKey))\n" +
+                    "if not stock or stock < num then\n" +
+                    "    return 1\n" +
+                    "end\n" +
+                    "\n" +
+                    "-- 3. 扣减库存\n" +
+                    "redis.call('decrby', stockKey, num)\n" +
+                    "\n" +
+                    "-- 4. 设置购买标记\n" +
+                    "local ttl = redis.call('hget', seckillKey, itemKey)\n" +
+                    "if ttl then\n" +
+                    "    local seckillData = cjson.decode(ttl)\n" +
+                    "    local expireTime = seckillData['endTime'] - seckillData['startTime']\n" +
+                    "    redis.call('setex', orderKey, expireTime/1000, num)\n" +
+                    "end\n" +
+                    "\n" +
+                    "-- 5. 返回成功\n" +
+                    "return 2";
+
     @Override
-    public String kill(String killId, String key, Integer num)  {
-        long s1=System.currentTimeMillis();
+    public String kill(String killId, String key, Integer num) {
+        long startTime = System.currentTimeMillis();
         MemberRespVo loginUser = LoginUserInterceptor.loginUser.get();
 
-        //1、获取当前秒杀商品信息
+        // 1. 获取秒杀商品信息
         BoundHashOperations<String, String, String> hashOps = redisTemplate.boundHashOps(SKUKILL_CACHE_PREFIX);
-        String s = hashOps.get(killId);
-        if (s == null) {
-            return null;
-        } else {
-            SeckillSkuRedisTo redisTo = JSON.parseObject(s, SeckillSkuRedisTo.class);
-            //校验合法性
-            //1、验证时间合法性
-            Long startTime = redisTo.getStartTime();
-            Long endTime = redisTo.getEndTime();
-            if (System.currentTimeMillis() >= startTime && System.currentTimeMillis() <= endTime) {
-                //2、验证随机码和商品id
-                String skuId = redisTo.getPromotionSessionId() + "_" + redisTo.getSkuId();
-                if (redisTo.getRandomCode().equals(key) && killId.equals(skuId)) {
-                    //3、验证购买数量是否超过限制
-                    if (new BigDecimal(num).compareTo(redisTo.getSeckillLimit()) <= 0) {
-                        //4、验证是否已购买过
-                        //幂等性：如果秒杀成功就去redis占位
-                        String redisKey = loginUser.getId() + "_" + skuId;
-                        //自动过期
-                        long ttl = endTime - System.currentTimeMillis();
-
-                        Boolean b = redisTemplate.opsForValue().setIfAbsent(redisKey, String.valueOf(num), ttl, TimeUnit.MILLISECONDS);
-                        if (Boolean.TRUE.equals(b)){//占位成功，说明没有买过
-                            RSemaphore semaphore = redissonClient.getSemaphore(SKU_STOCK_SEMAPHORE + redisTo.getRandomCode());
-                            try {
-                                boolean tryAcquire = semaphore.tryAcquire(num, 100, TimeUnit.MILLISECONDS);
-                                if (tryAcquire) {
-                                    //秒杀成功
-                                    //快速下单：发送MQ消息
-                                    String timeId = IdWorker.getTimeId();
-                                    SeckillOrderTo orderTo = new SeckillOrderTo();
-                                    orderTo.setOrderSn(timeId);
-                                    orderTo.setMemberId(loginUser.getId());
-                                    orderTo.setNum(num);
-                                    orderTo.setPromotionSessionId(redisTo.getPromotionSessionId());
-                                    orderTo.setSkuId(redisTo.getSkuId());
-                                    orderTo.setSeckillPrice(redisTo.getSeckillPrice());
-                                    rabbitTemplate.convertAndSend("order-event-exchange", "order.seckill.order", orderTo);
-                                    long s2=System.currentTimeMillis();
-                                    log.info("秒杀成功，耗时："+(s2-s1));
-                                    return timeId;
-                                }else {
-                                    return "手慢了，秒杀失败";
-                                }
-                            } catch (InterruptedException e) {
-                                return "手慢了，秒杀失败";
-                            }
-
-                        }else {//占位失败，说明买过了
-                            return "您已购买过此商品";
-                        }
-                    }else {
-                        return "秒杀数量超过限额！";
-                    }
-                }else {
-                    return "数据校验失败！";
-                }
-            }else {
-                return "不在秒杀时间内！";
-            }
+        String seckillInfo = hashOps.get(killId);
+        if (seckillInfo == null) {
+            return "秒杀商品不存在";
         }
 
+        SeckillSkuRedisTo redisTo = JSON.parseObject(seckillInfo, SeckillSkuRedisTo.class);
+
+        // 2. 基本校验
+        if (!isValidSeckill(redisTo, killId, key, num)) {
+            return "秒杀校验失败";
+        }
+
+        // 3. 执行Lua脚本原子操作
+        Long result = redisTemplate.execute(
+                new DefaultRedisScript<>(SECKILL_SCRIPT, Long.class),
+                Collections.emptyList(),
+                loginUser.getId().toString(),
+                redisTo.getSkuId().toString(),
+                num.toString(),
+                redisTo.getRandomCode(),
+                redisTo.getPromotionSessionId().toString()
+        );
+
+        // 4. 处理脚本执行结果
+        if (result == null) {
+            return "系统繁忙，请重试";
+        }
+
+        switch (result.intValue()) {
+            case 0: return "您已购买过此商品";
+            case 1: return "库存不足";
+            case 2:
+                // 秒杀成功，发送MQ消息
+                String orderSn = IdWorker.getTimeId();
+                SeckillOrderTo orderTo = new SeckillOrderTo();
+                orderTo.setOrderSn(orderSn);
+                orderTo.setMemberId(loginUser.getId());
+                orderTo.setNum(num);
+                orderTo.setPromotionSessionId(redisTo.getPromotionSessionId());
+                orderTo.setSkuId(redisTo.getSkuId());
+                orderTo.setSeckillPrice(redisTo.getSeckillPrice());
+
+                rabbitTemplate.convertAndSend(
+                        "order-event-exchange",
+                        "order.seckill.order",
+                        orderTo
+                );
+
+                log.info("秒杀成功，耗时：{}ms", System.currentTimeMillis() - startTime);
+                return orderSn;
+            default: return "秒杀失败";
+        }
     }
+
+    private boolean isValidSeckill(SeckillSkuRedisTo redisTo, String killId, String key, Integer num) {
+        // 校验时间
+        long currentTime = System.currentTimeMillis();
+        if (currentTime < redisTo.getStartTime() || currentTime > redisTo.getEndTime()) {
+            return false;
+        }
+
+        // 校验随机码和商品ID
+        String expectedKillId = redisTo.getPromotionSessionId() + "_" + redisTo.getSkuId();
+        if (!redisTo.getRandomCode().equals(key) || !expectedKillId.equals(killId)) {
+            return false;
+        }
+
+        // 校验购买数量
+        return new BigDecimal(num).compareTo(redisTo.getSeckillLimit()) <= 0;
+    }
+
+
 
     private void saveSessionInfos(List<SeckillSessionWithSkusVo> sessions) {
         sessions.forEach(session -> {

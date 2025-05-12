@@ -188,7 +188,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                     // 锁定成功
                     response.setOrder(order.getOrder());
                     //TODO 5、扣减积分
-//                    int i=10/0;
                     //TODO 订单创建成功发消息给MQ
                     rabbitTemplate.convertAndSend("order-event-exchange", "order.create.order", order.getOrder());
 

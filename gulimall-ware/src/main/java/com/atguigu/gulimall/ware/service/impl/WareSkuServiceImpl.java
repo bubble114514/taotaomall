@@ -89,7 +89,7 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
         //1、判断如果还没有这个库存记录，那么就新增
         List<WareSkuEntity> entities = wareSkuDao.selectList(new QueryWrapper<WareSkuEntity>().eq("sku_id", skuId)
                 .eq("ware_id", wareId));
-        if (entities == null || entities.size() == 0) {
+        if (entities == null || entities.isEmpty()) {
             WareSkuEntity skuEntity = new WareSkuEntity();
             skuEntity.setSkuId(skuId);
             skuEntity.setStock(skuNum);
@@ -105,6 +105,8 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
                     skuEntity.setSkuName((String) data.get("skuName"));
                 }
             } catch (Exception e) {
+                log.error("查询SKU名称失败，跳过设置名称", e); // 记录日志但继续执行
+                // 不标记回滚，事务继续
             }
 
             wareSkuDao.insert(skuEntity);
@@ -287,6 +289,7 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
     }
 
     @Data
+    static
     class SkuWareHasStock {
         private Long skuId;
         private Integer num;

@@ -1,4 +1,4 @@
-package com.atguigu.gulimall.seckill.fallback;
+package com.atguigu.gulimall.product.feign.fallback;
 
 
 import com.atguigu.common.exception.BizCodeEnume;
@@ -15,6 +15,4 @@ public class SeckillFeignServiceFallBack implements SeckillFeignService {
         log.error("熔断方法调用...getSkuSeckillInfo");
         return R.error(BizCodeEnume.TO_MANY_REQUEST.getCode(),BizCodeEnume.TO_MANY_REQUEST.getMsg());
     }
-
-
 }
