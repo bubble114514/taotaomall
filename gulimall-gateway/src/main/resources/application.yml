@@ -110,7 +110,7 @@ spring:
           uri: lb://gulimall-seckill
           predicates:
             - Host=seckill.gulimall.com
-#这报错不用管
+
 # 开启日志
 logging:
   level:

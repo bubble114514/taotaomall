@@ -189,7 +189,7 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
                 if (count == 1) {
                     // 锁定成功
                     skuStocked = true;
-                    //TODO 告诉MQ库存锁定成功
+                    //TODO 告诉 MQ 库存锁定成功
                     WareOrderTaskDetailEntity detailEntity = new WareOrderTaskDetailEntity(null, skuId, "", hasStock.getNum(), taskEntity.getId(), wareId, 1);
                     wareOrderTaskDetailService.save(detailEntity);
                     //发送消息

@@ -1,4 +1,4 @@
-package com.atguigu.gulimall.order.listener;
+package com.atguigu.gulimall.order.RabbitMQlistener;
 
 import com.atguigu.common.to.mq.SeckillOrderTo;
 import com.atguigu.gulimall.order.service.OrderService;

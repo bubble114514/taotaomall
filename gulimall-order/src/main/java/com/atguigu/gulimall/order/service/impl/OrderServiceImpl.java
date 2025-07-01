@@ -29,6 +29,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
@@ -66,6 +67,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     StringRedisTemplate redisTemplate;
     @Autowired
     OrderItemService orderItemService;
+    @Lazy
     @Autowired
     RabbitTemplate rabbitTemplate;
 
@@ -180,7 +182,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                     return itemVo;
                 }).collect(Collectors.toList());
                 lockVo.setLocks(locks);
-                //TODO 4、远程锁库存
+                //4、远程锁库存
                 //库存成功了，但是网络超时，订单回滚，库存已完成不会回滚
                 //为保证高并发，库存自己回滚。可以发消息给库存服务。
                 R r = wmsFeignService.orderLockStock(lockVo);
@@ -188,6 +190,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                     // 锁定成功
                     response.setOrder(order.getOrder());
                     //TODO 5、扣减积分
+
                     //TODO 订单创建成功发消息给MQ
                     rabbitTemplate.convertAndSend("order-event-exchange", "order.create.order", order.getOrder());
 
@@ -196,13 +199,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                     //  锁定失败
                     Long msg= (Long) r.get("msg");
                     throw new NoStockException(msg);
-
                 }
             } else {
                 response.setCode(2);
                 return response;
             }
-
     }
 
     @Override
@@ -237,8 +238,17 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     }
 
     @Override
+    @Transactional
     public void createSeckillOrder(SeckillOrderTo seckillOrder) {
-        //TODO 保存订单信息
+        // 1. 检查订单是否已存在（防重）
+        OrderEntity existOrder = this.getOne(new QueryWrapper<OrderEntity>()
+                .eq("order_sn", seckillOrder.getOrderSn()));
+        if (existOrder != null) {
+            log.warn("订单已存在，跳过处理: "+seckillOrder.getOrderSn());
+            return;
+        }
+        //创建订单
+        //保存订单信息
         OrderEntity orderEntity = new OrderEntity();
         orderEntity.setMemberId(seckillOrder.getMemberId());
         orderEntity.setStatus(OrderConstant.OrderStatusEnum.CREATE_NEW.getCode());
@@ -248,7 +258,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
         this.save(orderEntity);
 
-        //TODO 保存订单项
+        //保存订单项
         OrderItemEntity orderItemEntity = new OrderItemEntity();
         orderItemEntity.setOrderSn(seckillOrder.getOrderSn());
         orderItemEntity.setRealAmount(seckillOrder.getSeckillPrice().multiply(new BigDecimal(seckillOrder.getNum())));

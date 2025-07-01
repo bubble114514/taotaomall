@@ -3,11 +3,13 @@ package com.atguigu.gulimall.product.app;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 import com.atguigu.common.valid.AddGroup;
 import com.atguigu.common.valid.UpdateGroup;
 import com.atguigu.common.valid.UpdateStatusGroup;
+import com.atguigu.gulimall.product.vo.BrandVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -53,9 +55,17 @@ public class BrandController {
     }
 
     @GetMapping("/infos")
-    public R feignInfo(@RequestParam("brandIds") List<Long> brandIds){
+    public R feignInfo(@RequestParam("brandIds") List<Long> brandIds) {
         List<BrandEntity> brands = brandService.getBrandsByIds(brandIds);
-        return R.ok().put("brands", brands);
+        List<BrandVo> brandVos = brands.stream()
+                .map(brand -> {
+                    BrandVo vo = new BrandVo();
+                    vo.setBrandId(brand.getBrandId());
+                    vo.setBrandName(brand.getName());
+                    return vo;
+                })
+                .collect(Collectors.toList());
+        return R.ok().put("brands", brandVos);
     }
 
     /**

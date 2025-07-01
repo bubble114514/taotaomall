@@ -33,3 +33,20 @@ mybatis-plus:
       id-type: auto
 server:
   port: 9000
+# application.yml
+rocketmq:
+  name-server: 169.254.139.10:9876
+  producer:
+    group: order-producer-group
+    send-message-timeout: 3000
+    retry-times-when-send-failed: 3
+    retry-times-when-send-async-failed: 2
+  consumer:
+    group: order-consumer-group
+    pull-batch-size: 32
+    consume-thread-max: 64
+    consume-timeout: 30m
+    maxReconsumeTimes: 5  # 修改为驼峰命名
+    messageModel: CLUSTERING  # 同步修改其他驼峰属性
+    consumeMode: CONCURRENTLY  # 同步修改其他驼峰属性
+
