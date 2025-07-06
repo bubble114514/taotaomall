@@ -800,7 +800,7 @@
                                 <li th:each="brand : ${result.brands}">
                                     <a href="#"
                                        th:href="${'javascript:searchProducts(&quot;brandId&quot;,'+brand.brandId+')'}">
-                                        <img th:src="${brand.brandImg}" alt="">
+                                        <img th:src="${brand.brandImg}" alt="" style="width: 80px; height: 40px; object-fit: contain;">
                                         <div th:text="${brand.brandName}">
                                             华为(HUAWEI)
                                         </div>

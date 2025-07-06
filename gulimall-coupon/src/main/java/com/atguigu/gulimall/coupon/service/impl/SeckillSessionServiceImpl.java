@@ -49,7 +49,7 @@ public class SeckillSessionServiceImpl extends ServiceImpl<SeckillSessionDao, Se
     @Override
     public List<SeckillSessionEntity> getLast3DaySession() {
         //获得所有秒杀活动
-        List<SeckillSessionEntity> list = this.list(new QueryWrapper<SeckillSessionEntity>().between("start_time", startTime(), endTime()));
+        List<SeckillSessionEntity> list = this.list(new QueryWrapper<SeckillSessionEntity>());//.between("start_time", startTime(), endTime()))
 
         if (list != null && !list.isEmpty()){
             List<SeckillSessionEntity> collect = list.stream().map(item -> {
@@ -59,6 +59,7 @@ public class SeckillSessionServiceImpl extends ServiceImpl<SeckillSessionDao, Se
                 item.setRelationSkus(relationEntities);
                 return item;
             }).collect(Collectors.toList());
+            System.out.println( collect);
             return collect;
         }
 

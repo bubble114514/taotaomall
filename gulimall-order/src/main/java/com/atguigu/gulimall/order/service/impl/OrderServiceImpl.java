@@ -197,8 +197,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                     return response;
                 } else {
                     //  锁定失败
-                    Long msg= (Long) r.get("msg");
-                    throw new NoStockException(msg);
+//                    Long msg= (Long) r.get("msg");
+                    throw new NoStockException(6L);
                 }
             } else {
                 response.setCode(2);
