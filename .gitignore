@@ -15,3 +15,19 @@ buildNumber.properties
 .project
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
+
+# 忽略配置文件
+*/src/main/resources/application.yml
+*/src/main/resources/application-dev.yml
+# 忽略测试类中的敏感信息文件（可选）
+*/src/test/java/**/*Tests.java
+# 忽略密钥文件
+*.key
+*.secret
+
+# 忽略真实配置文件
+*/src/main/resources/application.yml
+# 忽略密钥相关文件
+*.key
+*.secret
+.env
