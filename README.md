@@ -1,2 +1,2 @@
 # gulimall
-谷粒商城
+B2C商城
